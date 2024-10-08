@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Система управления{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            <button id="studentsBtn" class="nav-btn"><i class="fas fa-user-graduate"></i> Обучающиеся</button>
+            <button id="specialistsBtn" class="nav-btn"><i class="fas fa-user-md"></i> Специалисты</button>
+            <button id="scheduleBtn" class="nav-btn"><i class="fas fa-calendar-alt"></i> Расписание</button>
+        </nav>
+    </header>
+    <main>
+        <div id="listContainer"></div>
+        <div id="detailContainer"></div>
+        <div id="scheduleContainer" class="content-container"></div>
+    </main>
+    <script type="module" src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
