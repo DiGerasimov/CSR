@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+.history
+
+# IDE - PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# IDE - Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Файлы настроек
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Логи и базы данных
+*.log
+*.sql
+*.sqlite
+
+# Статические файлы и медиа (если управляются отдельно)
+/static/
+/media/
+
+# Файлы миграций (опционально)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Node (если используется фронтенд)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log* 
