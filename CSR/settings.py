@@ -18,7 +18,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CORS_ALLOWED_ORIGINS = [
-    os.getenv('API_BASE_URL', 'http://localhost:8000'),
+    os.getenv('API_BASE_URL'),
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
