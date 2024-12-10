@@ -5,3 +5,4 @@ psycopg2-binary
 django-import-export
 openpyxl
 pandas
+django-cors-headers
