@@ -62,6 +62,9 @@ def get_schedule(request):
         if position:
             schedules = schedules.filter(specialists__position__name=position)
 
+        # Сортировка расписания по времени начала
+        schedules = schedules.order_by('time_start')
+
         serializer = ScheduleSerializer(schedules, many=True)
         schedule_data = serializer.data
 
