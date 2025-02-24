@@ -242,7 +242,7 @@ def export_specialist_schedule_to_excel(specialist, start_date, end_date):
         ws.title = "Расписание специалиста"
 
         # Заголовки
-        headers = ["Дата", "Время", "Кабинет", "Название", "Обучающиеся", "Присутствовали"]
+        headers = ["Дата", "Время", "Кабинет", "Название", "Обучающиеся", "Присутствовали", "Дополнительная информация"]
         for col, header in enumerate(headers, start=1):
             ws.cell(row=1, column=col, value=header).font = Font(bold=True)
 
@@ -278,6 +278,9 @@ def export_specialist_schedule_to_excel(specialist, start_date, end_date):
                 # Добавляем информацию о присутствии
                 present_students = [attendance.student.full_name for attendance in schedule.attendances.filter(is_present=True)]
                 ws.cell(row=row, column=6, value=", ".join(present_students))
+                
+                # Добавляем дополнительную информацию
+                ws.cell(row=row, column=7, value=schedule.additional_info if schedule.additional_info else "")
                 
                 row += 1
             except Exception as e:
