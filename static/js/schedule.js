@@ -214,10 +214,14 @@ function generateMonthSchedule(scheduleData) {
         for (let i = 0; i < 7; i++) {
             const cellDate = new Date(startDate);
             if (cellDate.getMonth() === currentDate.getMonth()) {
-                const dateString = cellDate.toISOString().split('T')[0];
-                const dayEvents = scheduleData.filter(event => 
-                    new Date(event.time_start).toISOString().split('T')[0] === dateString
-                );
+                // Форматируем дату ячейки с учетом московского часового пояса
+                const cellDateStr = cellDate.toLocaleDateString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit' }).split('.').reverse().join('-');
+                const dayEvents = scheduleData.filter(event => {
+                    // Получаем дату события с учетом московского часового пояса
+                    const eventDate = new Date(event.time_start);
+                    const eventDateStr = eventDate.toLocaleDateString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Europe/Moscow' }).split('.').reverse().join('-');
+                    return eventDateStr === cellDateStr;
+                });
                 html += `<div class="schedule-cell">
                     <div class="date">${cellDate.getDate()}</div>
                     ${dayEvents.map(event => generateEventHTML(event)).join('')}
@@ -250,7 +254,8 @@ function generateWeekSchedule(scheduleData) {
     // Получаем уникальные времена начала событий
     const uniqueStartTimes = [...new Set(scheduleData.map(event => {
         const startTime = new Date(event.time_start);
-        return `${startTime.getHours()}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+        // Форматируем время с учетом московского часового пояса
+        return startTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }).slice(0, 5);
     }))].sort();
 
     // Генерируем ячейки для каждого уникального времени
@@ -263,9 +268,11 @@ function generateWeekSchedule(scheduleData) {
             cellDate.setHours(hours, minutes, 0, 0);
             const cellEvents = scheduleData.filter(event => {
                 const eventStart = new Date(event.time_start);
-                return eventStart.getDate() === cellDate.getDate() && 
-                       eventStart.getHours() === hours &&
-                       eventStart.getMinutes() === minutes;
+                // Получаем дату и время события с учетом московского часового пояса
+                const eventDate = eventStart.toLocaleDateString('ru-RU', { timeZone: 'Europe/Moscow' });
+                const eventTime = eventStart.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' }).slice(0, 5);
+                const cellDateStr = cellDate.toLocaleDateString('ru-RU');
+                return eventDate === cellDateStr && eventTime === time;
             });
             html += `<div class="schedule-cell">${cellEvents.map(event => generateEventHTML(event)).join('')}</div>`;
         }
@@ -278,13 +285,13 @@ function generateWeekSchedule(scheduleData) {
 
 
 function formatTime(date) {
-    const adjustedDate = new Date(date.getTime() + 3 * 60 * 60 * 1000); // Добавляем 3 часа
-    return adjustedDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    // Используем московское время (Europe/Moscow) без ручной корректировки
+    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Moscow' });
 }
 
 function formatDateTime(date) {
-    const adjustedDate = new Date(date.getTime() + 3 * 60 * 60 * 1000); // Добавляем 3 часа
-    return adjustedDate.toLocaleString('ru-RU', { timeZone: 'UTC' });
+    // Используем московское время (Europe/Moscow) без ручной корректировки
+    return date.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
 }
 
 function getWeekStart(date) {
@@ -312,10 +319,11 @@ function getMonthYearText(date) {
 
 
 function getEventColor(startDate, endDate) {
-    const now = new Date();
-    if (startDate <= now && now < endDate) {
+    // Получаем текущее время по московскому часовому поясу
+    const moscowNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+    if (startDate <= moscowNow && moscowNow < endDate) {
         return 'event-current';
-    } else if (endDate <= now) {
+    } else if (endDate <= moscowNow) {
         return 'event-past';
     }
     return '';

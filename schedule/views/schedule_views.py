@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from datetime import datetime, timedelta
 from django.db.models import Q
+from django.utils import timezone
 
 from ..models import Schedule, Specialist, Position, Attendance, Student
 from ..serializers import ScheduleSerializer, SpecialistListSerializer
@@ -37,7 +38,7 @@ def get_schedule(request):
             schedules = Schedule.objects.all()
         else:
             if not start_date:
-                start_date = datetime.now().date()
+                start_date = timezone.now().date()
             else:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
 
@@ -165,6 +166,7 @@ def duplicate_schedule(request):
         
         for week in range(1, weeks_count + 1):
             # Вычисляем новые даты начала и окончания (смещение на week недель)
+            # Используем осведомленные о часовом поясе объекты datetime
             new_start_time = original_schedule.time_start + timedelta(weeks=week)
             new_end_time = original_schedule.time_end + timedelta(weeks=week)
             

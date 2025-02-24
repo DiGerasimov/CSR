@@ -83,9 +83,9 @@ def export_student_schedule_to_excel(request, student_id):
                 week_end = current_week_start + timedelta(days=6)
                 week_str = f"{current_week_start.strftime('%d.%m.%Y')} - {week_end.strftime('%d.%m.%Y')}"
             
-            # Добавляем 3 часа к времени начала и окончания
-            adjusted_start_time = schedule.time_start + timedelta(hours=3)
-            adjusted_end_time = schedule.time_end + timedelta(hours=3)
+            # Используем время напрямую, без корректировки, так как Django должен учитывать часовой пояс
+            adjusted_start_time = schedule.time_start
+            adjusted_end_time = schedule.time_end
             
             write_cell(ws_schedule, row, 1, week_str)
             write_cell(ws_schedule, row, 2, f"{start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}")
@@ -258,8 +258,8 @@ def export_specialist_schedule_to_excel(specialist, start_date, end_date):
         current_date = None
         for schedule in schedules:
             try:
-                adjusted_start_time = schedule.time_start + timedelta(hours=3)
-                adjusted_end_time = schedule.time_end + timedelta(hours=3)
+                adjusted_start_time = schedule.time_start
+                adjusted_end_time = schedule.time_end
 
                 # Если дата изменилась, добавляем пустую строку
                 if current_date and current_date != adjusted_start_time.date():
