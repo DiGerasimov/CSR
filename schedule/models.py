@@ -3,7 +3,8 @@ from uuid import uuid4
 
 from django.utils.translation import gettext_lazy as _
 
-
+# Импорт для экспорта
+__all__ = ['Student', 'Relative', 'Specialist', 'Position', 'Room', 'Schedule', 'Attendance']
 
 class Student(models.Model):
     CAPACITY_CHOICES = [

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from django.db.models import Q
 from django.utils import timezone
 
-from ..models import Schedule, Specialist, Position, Attendance, Student
+from ..models import *
 from ..serializers import ScheduleSerializer, SpecialistListSerializer
 
 @swagger_auto_schema(

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Student, Relative, Specialist, Position
+from .models import *
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 

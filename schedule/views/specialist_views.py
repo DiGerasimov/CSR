@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from ..models import Specialist, Position
+from ..models import *
 from ..serializers import SpecialistListSerializer, SpecialistDetailSerializer, PositionSerializer
 
 @swagger_auto_schema(
