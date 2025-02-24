@@ -327,16 +327,74 @@ function generateEventHTML(event) {
     
     let eventText = `<strong>${formatTime(startTime)}-${formatTime(endTime)}</strong><br>`;
     
+    // Улучшаем отображение специалистов с должностями
     const specialistsShort = event.specialists.map(specialist => {
-        const nameParts = specialist.split(' ');
-        return `${nameParts[0]} ${nameParts[1][0]}.`;
+        // Проверяем, содержит ли строка с именем специалиста информацию о должности в скобках
+        const roleMatch = specialist.match(/\((.*?)\)$/);
+        let displayName = specialist;
+        
+        if (!roleMatch) {
+            // Если должности нет в строке специалиста, проверяем название события
+            const eventRoleMatch = event.name ? event.name.match(/\((.*?)\)/) : null;
+            const role = eventRoleMatch ? eventRoleMatch[1] : '';
+            
+            // Получаем только имя специалиста (без должности)
+            const nameParts = specialist.split(' ');
+            if (nameParts.length >= 2) {
+                // Берем фамилию полностью и первую букву имени
+                displayName = `${nameParts[0]} ${nameParts.length > 1 ? nameParts[1][0] + '.' : ''}`;
+                // Добавляем должность, если она есть
+                if (role) {
+                    displayName += ` (${role})`;
+                }
+            }
+        } else {
+            // Если должность уже есть в строке специалиста, форматируем отображение
+            const name = specialist.replace(/\s*\(.*?\)$/, ''); // Удаляем должность из имени
+            const nameParts = name.split(' ');
+            if (nameParts.length >= 2) {
+                // Берем фамилию полностью и первую букву имени
+                displayName = `${nameParts[0]} ${nameParts.length > 1 ? nameParts[1][0] + '.'  : ''} ${roleMatch[0]}`;
+            }
+        }
+        
+        return displayName;
     }).join('<br>');
     
     eventText += specialistsShort;
     
+    // Добавляем информацию о кабинете
+    if (event.room) {
+        eventText += `<br>Каб. ${event.room}`;
+    }
+    
+    // Добавляем список детей более компактно
+    if (event.students && event.students.length > 0) {
+        eventText += `<br><small>Дети (${event.students.length}): `;
+        // Берем только первые 3 имени, чтобы не перегружать карточку
+        const studentNames = event.students.slice(0, 3).map(student => {
+            const name = student.full_name.split(' ')[0];
+            return name;
+        });
+        
+        if (event.students.length > 3) {
+            eventText += studentNames.join(', ') + '...';
+        } else {
+            eventText += studentNames.join(', ');
+        }
+        eventText += '</small>';
+    }
+    
     const eventColor = getEventColor(startTime, endTime);
     
-    return `<div class="schedule-event ${eventColor}" onclick="showEventDetails('${event.id}')" title="${event.specialists.join('\n')}">${eventText}</div>`;
+    // Добавляем title с полной информацией для отображения при наведении
+    const fullTitle = `${event.name}
+${event.specialists.join('\n')}
+Кабинет: ${event.room || 'Не указан'}
+Дети: ${event.students.map(s => s.full_name).join(', ')}
+Дополнительная информация: ${event.additional_info || ''}`;
+    
+    return `<div class="schedule-event ${eventColor}" onclick="showEventDetails('${event.id}')" title="${fullTitle}">${eventText}</div>`;
 }
 
 window.showEventDetails = function(eventId) {
@@ -346,15 +404,49 @@ window.showEventDetails = function(eventId) {
         return;
     }
 
+    // Отладочная информация для проверки структуры данных
+    console.log('Event data:', event);
+
     const eventDetails = document.getElementById('eventDetails');
     const modalOverlay = document.getElementById('modalOverlay');
     
-    let specialistsHtml = event.specialists.map(specialist => `
+    // Улучшенная логика для отображения специалистов с должностями
+    let specialistsHtml = '';
+    
+    // Проверяем, есть ли в данных специалиста информация о должности
+    specialistsHtml = event.specialists.map(specialist => {
+        // Проверяем, содержит ли строка с именем специалиста информацию о должности в скобках
+        const roleMatch = specialist.match(/\((.*?)\)$/);
+        
+        if (roleMatch) {
+            // Если должность уже есть в строке специалиста, просто возвращаем как есть
+            return `
+                <tr>
+                    <th>ФИО специалиста</th>
+                    <td>${specialist}</td>
+                </tr>
+            `;
+        } else {
+            // Если должности нет в строке специалиста, проверяем название события
+            const eventRoleMatch = event.name ? event.name.match(/\((.*?)\)/) : null;
+            const role = eventRoleMatch ? eventRoleMatch[1] : '';
+            
+            return `
+                <tr>
+                    <th>ФИО специалиста</th>
+                    <td>${specialist}${role ? ` (${role})` : ''}</td>
+                </tr>
+            `;
+        }
+    }).join('');
+
+    // Всегда добавляем строку с дополнительной информацией
+    const additionalInfoHtml = `
         <tr>
-            <th>ФИО специалиста</th>
-            <td>${specialist}</td>
+            <th>Дополнительная информация</th>
+            <td>${event.additional_info || ''}</td>
         </tr>
-    `).join('');
+    `;
 
     eventDetails.innerHTML = `
         <h3>Подробная информация</h3>
@@ -365,7 +457,11 @@ window.showEventDetails = function(eventId) {
             <tr><th>Кабинет</th><td>${event.room}</td></tr>
             <tr><th>Время начала</th><td>${formatDateTime(new Date(event.time_start))}</td></tr>
             <tr><th>Время окончания</th><td>${formatDateTime(new Date(event.time_end))}</td></tr>
+            ${additionalInfoHtml}
         </table>
+        <div class="action-buttons">
+            <button onclick="duplicateSchedule('${event.id}')" class="duplicate-btn">Дублировать на следующие недели</button>
+        </div>
         <h4>Посещаемость обучающихся:</h4>
         <form id="attendanceForm">
             <table class="attendance-table">
@@ -430,7 +526,52 @@ window.showEventDetails = function(eventId) {
             alert('Произошла ошибка при сохранении посещаемости');
         }
     });
-}
+};
+
+// Функция для дублирования карточки расписания
+window.duplicateSchedule = async function(scheduleId) {
+    // Запрашиваем у пользователя количество недель для дублирования
+    const weeksCount = prompt('Введите количество недель для дублирования (от 1 до 52):', '1');
+    
+    // Проверяем введенное значение
+    if (weeksCount === null) {
+        return; // Пользователь отменил операцию
+    }
+    
+    const weeks = parseInt(weeksCount);
+    if (isNaN(weeks) || weeks < 1 || weeks > 52) {
+        alert('Пожалуйста, введите корректное число от 1 до 52');
+        return;
+    }
+    
+    try {
+        const csrftoken = getCookie('csrftoken');
+        const response = await fetch(API_URLS.DUPLICATE_SCHEDULE, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                schedule_id: scheduleId,
+                weeks_count: weeks
+            }),
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(result.message);
+            closeEventDetails();
+            await updateSchedule(); // Обновляем расписание после дублирования
+        } else {
+            throw new Error(result.error || 'Ошибка при дублировании расписания');
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при дублировании расписания: ' + error.message);
+    }
+};
 
 function getCookie(name) {
     let cookieValue = null;

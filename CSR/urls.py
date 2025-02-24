@@ -49,6 +49,6 @@ urlpatterns = [
     path('students/upload-excel/', upload_students_excel_view, name='upload_students_excel'),
     path('schedule/', get_schedule, name='get_schedule'),
     path('schedule/attendance/', update_attendance, name='update_attendance'),
-
+    path('schedule/duplicate/', duplicate_schedule, name='duplicate_schedule'),
 
 ]

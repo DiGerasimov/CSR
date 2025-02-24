@@ -206,6 +206,7 @@ class Schedule(models.Model):
     specialists = models.ManyToManyField(Specialist, verbose_name=_("Специалисты"), blank=True)
     time_start = models.DateTimeField(_("Время начала"), null=True, blank=True)
     time_end = models.DateTimeField(_("Время конца"), null=True, blank=True)
+    additional_info = models.TextField(_("Дополнительная информация"), blank=True, null=True, default="")
 
 
     class Meta:

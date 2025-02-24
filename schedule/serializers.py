@@ -263,4 +263,4 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = ['id', 'name', 'room', 'students', 'specialists', 'time_start', 'time_end', 'attendances']
+        fields = ['id', 'name', 'room', 'students', 'specialists', 'time_start', 'time_end', 'attendances', 'additional_info']

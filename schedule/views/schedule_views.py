@@ -7,7 +7,7 @@ from drf_yasg import openapi
 from datetime import datetime, timedelta
 from django.db.models import Q
 
-from ..models import Schedule, Specialist, Position
+from ..models import Schedule, Specialist, Position, Attendance, Student
 from ..serializers import ScheduleSerializer, SpecialistListSerializer
 
 @swagger_auto_schema(
@@ -134,5 +134,80 @@ def update_attendance(request):
         return Response({"error": "Расписание не найдено"}, status=status.HTTP_404_NOT_FOUND)
     except Student.DoesNotExist:
         return Response({"error": "Студент не найден"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(
+    method='post',
+    operation_description="Дублирование карточки расписания на следующие недели",
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['schedule_id', 'weeks_count'],
+        properties={
+            'schedule_id': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_UUID),
+            'weeks_count': openapi.Schema(type=openapi.TYPE_INTEGER, description="Количество недель для дублирования"),
+        },
+    ),
+    responses={200: "Карточки успешно дублированы", 400: "Неверные данные"}
+)
+@api_view(['POST'])
+def duplicate_schedule(request):
+    try:
+        schedule_id = request.data.get('schedule_id')
+        weeks_count = int(request.data.get('weeks_count', 1))
+        
+        if weeks_count <= 0 or weeks_count > 52:  # Ограничение на количество недель (максимум год)
+            return Response({"error": "Некорректное количество недель"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        original_schedule = Schedule.objects.get(id=schedule_id)
+        
+        duplicated_schedules = []
+        
+        for week in range(1, weeks_count + 1):
+            # Вычисляем новые даты начала и окончания (смещение на week недель)
+            new_start_time = original_schedule.time_start + timedelta(weeks=week)
+            new_end_time = original_schedule.time_end + timedelta(weeks=week)
+            
+            # Проверяем, существует ли уже карточка с такими же параметрами
+            existing_schedule = Schedule.objects.filter(
+                name=original_schedule.name,
+                room=original_schedule.room,
+                time_start=new_start_time,
+                time_end=new_end_time
+            ).first()
+            
+            if existing_schedule:
+                continue  # Пропускаем создание дубликата
+                
+            # Создаем новую карточку расписания
+            new_schedule = Schedule.objects.create(
+                name=original_schedule.name,
+                room=original_schedule.room,
+                time_start=new_start_time,
+                time_end=new_end_time,
+                additional_info=original_schedule.additional_info
+            )
+            
+            # Копируем связи со специалистами
+            for specialist in original_schedule.specialists.all():
+                new_schedule.specialists.add(specialist)
+                
+            # Копируем связи со студентами
+            for student in original_schedule.students.all():
+                new_schedule.students.add(student)
+                
+            # Не копируем посещаемость, как указано в требованиях
+            
+            duplicated_schedules.append(str(new_schedule.id))
+        
+        return Response({
+            "message": f"Успешно создано {len(duplicated_schedules)} копий карточки расписания",
+            "duplicated_schedules": duplicated_schedules
+        }, status=status.HTTP_200_OK)
+        
+    except Schedule.DoesNotExist:
+        return Response({"error": "Расписание не найдено"}, status=status.HTTP_404_NOT_FOUND)
+    except ValueError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
